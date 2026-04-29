@@ -33,7 +33,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .ferr-badge-warn{background:#B45309!important}
 .ferr-badge-critico{background:#991B1B!important;animation:pisca-badge 1s infinite}
 @keyframes pisca-badge{0%,100%{opacity:1}50%{opacity:.4}}
-#oee-bar{display:flex;align-items:center;gap:16px;padding:8px 0 14px;overflow-x:auto}
+#oee-bar{display:flex;align-items:center;gap:16px;padding:8px 0 14px;overflow-x:auto;justify-content:flex-start}
 .oee-main{flex-shrink:0}
 .oee-lbl{color:#5B8FC7;font-size:9px;font-family:var(--mono);letter-spacing:1.5px;text-transform:uppercase}
 .oee-val{font-size:26px;font-weight:700;font-family:var(--mono);line-height:1}
@@ -198,6 +198,7 @@ label{font-size:12px;font-weight:600;color:var(--textSec);margin-bottom:5px;disp
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
 @media(min-width:768px){
   #header{padding:18px 28px 0}
+  #oee-bar{justify-content:flex-start;gap:28px}
   .oee-val{font-size:42px}
   .oee-bar-track{width:80px;height:6px}
   .oee-pct{font-size:15px;font-weight:700}
@@ -241,7 +242,7 @@ label{font-size:12px;font-weight:600;color:var(--textSec);margin-bottom:5px;disp
   <div id="header-top">
     <div>
       <div class="h-label">Painel do Turno</div>
-      <div class="h-title">MAZAK 07 · 08</div>
+      <div class="h-title">MAZAK <span id="hMaqNomes">07 · 08</span></div>
       <div class="h-sub">Líder: <span id="hSupervisor">Alex</span></div>
     </div>
     <div class="h-right">
@@ -298,6 +299,10 @@ label{font-size:12px;font-weight:600;color:var(--textSec);margin-bottom:5px;disp
     <div class="row">
       <div class="grp"><label>Operador</label><input type="text" id="nomeOperador" placeholder="Diego" oninput="salvarCFG()"></div>
       <div class="grp md"><label>Líder</label><input type="text" id="nomeSupervisor" placeholder="Alex" oninput="salvarCFG()"></div>
+    </div>
+    <div class="row">
+      <div class="grp"><label>Nome Máquina 1</label><input type="text" id="nomeM07" placeholder="Ex: MAZAK 07" style="font-family:var(--mono);font-weight:700" oninput="salvarCFG()"></div>
+      <div class="grp"><label>Nome Máquina 2</label><input type="text" id="nomeM08" placeholder="Ex: MAZAK 08" style="font-family:var(--mono);font-weight:700" oninput="salvarCFG()"></div>
     </div>
     <div class="row">
       <div class="grp md">
@@ -1354,6 +1359,11 @@ setInterval(function(){document.getElementById('hDate').textContent=new Date().t
 // ── INIT ────────────────────────────────────────────────────
 load();
 var cfgMap={nomeOperador:'operador',nomeSupervisor:'supervisor',numTurno:'numTurno',pctDesconto:'pctDesconto'};
+// Restaurar nomes das máquinas
+if(CFG.nomeM07){S.maquinas[0].nome=CFG.nomeM07;var el07=document.getElementById('nomeM07');if(el07)el07.value=CFG.nomeM07;}
+if(CFG.nomeM08){S.maquinas[1].nome=CFG.nomeM08;var el08=document.getElementById('nomeM08');if(el08)el08.value=CFG.nomeM08;}
+var hn=document.getElementById('hMaqNomes');
+if(hn)hn.textContent=(CFG.nomeM07||'07')+' · '+(CFG.nomeM08||'08');
 Object.keys(cfgMap).forEach(function(id){var el=document.getElementById(id);if(el&&CFG[cfgMap[id]]!==undefined)el.value=CFG[cfgMap[id]];});
 var ho=document.getElementById('hOperador');var hs=document.getElementById('hSupervisor');
 if(ho)ho.textContent=CFG.operador||'Diego';if(hs)hs.textContent=CFG.supervisor||'Alex';
