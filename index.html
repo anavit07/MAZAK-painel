@@ -241,7 +241,7 @@ label{font-size:12px;font-weight:600;color:var(--textSec);margin-bottom:5px;disp
   <div id="header-top">
     <div>
       <div class="h-label">Painel do Turno</div>
-      <div class="h-title">MAZAK</div>
+      <div class="h-title">MAZAK 07 · 08</div>
       <div class="h-sub">Líder: <span id="hSupervisor">Alex</span></div>
     </div>
     <div class="h-right">
@@ -309,7 +309,6 @@ label{font-size:12px;font-weight:600;color:var(--textSec);margin-bottom:5px;disp
         </select>
       </div>
       <div class="grp md"><label>Desconto op. (%)</label><input type="number" id="pctDesconto" value="3" min="0" max="20" style="font-family:var(--mono);text-align:center" oninput="salvarCFG();render()"></div>
-      <div class="grp md"><label>Min. do Turno</label><input type="number" id="minTurno" value="528" min="60" max="720" style="font-family:var(--mono);text-align:center;font-weight:700" oninput="salvarCFG();render()" title="1º turno = 528min · 2º turno menor, ajuste aqui"></div>
     </div>
   </div>
 
@@ -524,9 +523,6 @@ label{font-size:12px;font-weight:600;color:var(--textSec);margin-bottom:5px;disp
 
 <!-- ── RELATÓRIO ── -->
 <div id="page-relatorio" class="page">
-  <div class="gas-config-card">
-    <div class="gas-header">
-      <div class="card-title" style="margin:0">📊 Integração — Google Sheets</div>
       <button class="gas-toggle" id="gasToggleBtn" onclick="toggleGasConfig()">▼ configurar</button>
     </div>
     <div class="gas-body" id="gasBody">
@@ -539,12 +535,10 @@ label{font-size:12px;font-weight:600;color:var(--textSec);margin-bottom:5px;disp
   </div>
   <div class="card"><div class="card-title">Data do Turno</div><input type="date" id="dataTurno" onchange="save();document.getElementById('relatorioPrevia').textContent=gerarRelatorio()"></div>
   <div class="card"><div class="card-title">Obs. para o Próximo Turno</div><textarea id="obsProx" placeholder="Passe informações para o próximo turno..."></textarea></div>
-  <button class="btn btn-primary btn-lg" id="sheet-btn" onclick="enviarPlanilha()" style="margin-bottom:8px">📊 Enviar para Planilha</button>
   <div style="display:flex;gap:10px;margin-bottom:8px">
     <button class="btn btn-primary btn-lg" id="copy-btn" onclick="copiarRelatorio()" style="flex:1">📋 Copiar Relatório</button>
     <button class="btn btn-ghost btn-lg" onclick="imprimirRelatorio()" style="flex:1;border-color:var(--primary);color:var(--green)">🖨️ Imprimir</button>
   </div>
-  <button class="btn btn-ghost btn-lg" onclick="imprimirSemanal()" style="margin-bottom:8px;border-color:var(--yellowV);color:var(--yellow)">📅 Imprimir Semanal</button>
   <button class="btn btn-ghost btn-lg" onclick="confirmarNovoTurno()" style="border-color:var(--redV);color:var(--red);margin-bottom:14px">🔄 Novo Turno</button>
   <div class="summary-grid">
     <div class="sum-box"><div class="sum-val" id="sBoas" style="color:var(--green)">0</div><div class="sum-lbl">Boas</div></div>
@@ -571,15 +565,15 @@ label{font-size:12px;font-weight:600;color:var(--textSec);margin-bottom:5px;disp
 
 <script>
 'use strict';
+
 // ── SUPABASE CONFIG ─────────────────────────────────────────
-var SB_URL   = 'https://znzumtyqvoqzasjlhwug.supabase.co'; // ← troque
-var SB_KEY   = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpuenVtdHlxdm9xemFzamxod3VnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMzQwMjUsImV4cCI6MjA5MjkxMDAyNX0.eYym9d-xOVAa25O78DLEppasdnfGwgWqFZKuoTgf5zA';  // ← sua anon key
+var SB_URL   = 'https://znzumtyqvoqzasjlhwug.supabase.co';
+var SB_KEY   = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpuenVtdHlxdm9xemFzamxod3VnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMzQwMjUsImV4cCI6MjA5MjkxMDAyNX0.eYym9d-xOVAa25O78DLEppasdnfGwgWqFZKuoTgf5zA';
 var SB_TABLE = 'turnos_mazak';
-var SB_TOKEN = null; // preenchido após login
-var SB_ID    = null; // ID do turno atual
+var SB_TOKEN = null;
+var SB_ID    = null;
 // ────────────────────────────────────────────────────────────
 
-// ── AUTH ────────────────────────────────────────────────────
 async function sbLogin(email, senha) {
   var res = await fetch(SB_URL + '/auth/v1/token?grant_type=password', {
     method: 'POST',
@@ -590,14 +584,13 @@ async function sbLogin(email, senha) {
   if (data.access_token) {
     SB_TOKEN = data.access_token;
     try { localStorage.setItem('sb_token_mazak', SB_TOKEN); } catch(e){}
-    return { ok: true, nome: (data.user && data.user.user_metadata && data.user.user_metadata.nome) || email.split('@')[0] };
+    return { ok: true };
   }
   return { ok: false, erro: data.error_description || 'Usuário ou senha incorretos' };
 }
 
 async function sbVerificarToken() {
-  var token = '';
-  try { token = localStorage.getItem('sb_token_mazak') || ''; } catch(e){}
+  var token = ''; try { token = localStorage.getItem('sb_token_mazak') || ''; } catch(e){}
   if (!token) return false;
   var res = await fetch(SB_URL + '/auth/v1/user', {
     headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + token }
@@ -638,13 +631,13 @@ async function tentarLogin() {
     mostrarPainel();
     await sbLoad();
     render();
+    var fields = {anProblema:'problema',anCausaRaiz:'causaRaiz',anOQueFoi:'oQueFoi',anProposta:'proposta',anResponsavel:'responsavel',anAcaoPendente:'acaoPendente'};
+    Object.keys(fields).forEach(function(id){var el=document.getElementById(id);if(el&&S.analise[fields[id]])el.value=S.analise[fields[id]];});
   } else {
     errEl.textContent = result.erro;
   }
 }
-// ────────────────────────────────────────────────────────────
 
-// ── SUPABASE SAVE/LOAD ───────────────────────────────────────
 async function sbSave() {
   if (!SB_TOKEN) return;
   var dtEl  = document.getElementById('dataTurno');
@@ -707,8 +700,9 @@ async function sbLoad() {
 }
 // ────────────────────────────────────────────────────────────
 
+
 var TURNO=528, MOTIVOS=['TT','CO','ST','TF'];
-var CFG={operador:'Diego',supervisor:'Alex',numTurno:'1',pctDesconto:3,minTurno:528};
+var CFG={operador:'Diego',supervisor:'Alex',numTurno:'1',pctDesconto:3};
 
 // ── FERRAMENTAS ─────────────────────────────────────────────
 // CFG.ferramentas = array de {id, nome, maquina, vida (min), usado (min), alerta (%), obs, confirmada, horaConf}
@@ -1011,12 +1005,10 @@ function salvarCFG(){
   var sv=document.getElementById('nomeSupervisor');
   var nt=document.getElementById('numTurno');
   var pd=document.getElementById('pctDesconto');
-  var mt=document.getElementById('minTurno');
   if(op)CFG.operador=op.value;
   if(sv)CFG.supervisor=sv.value;
   if(nt)CFG.numTurno=nt.value;
   if(pd)CFG.pctDesconto=parseFloat(pd.value)||3;
-  if(mt){CFG.minTurno=parseInt(mt.value)||528;TURNO=CFG.minTurno;}
   var ho=document.getElementById('hOperador');var hs=document.getElementById('hSupervisor');
   if(ho)ho.textContent=CFG.operador||'Diego';
   if(hs)hs.textContent=CFG.supervisor||'Alex';
@@ -1270,7 +1262,7 @@ function gerarRelatorio(){
   var now=new Date();
   var dtEl=document.getElementById('dataTurno');
   var data=dtEl&&dtEl.value?(function(v){var p=v.split('-');return p[2]+'/'+p[1]+'/'+p[0];})(dtEl.value):now.toLocaleDateString('pt-BR');
-  var t='📋 RELATÓRIO DE TURNO — MAZAK\n';
+  var t='📋 RELATÓRIO DE TURNO — MAZAK 07 e 08\n';
   t+='👤 Operador: '+(CFG.operador||'Diego')+' | '+CFG.numTurno+'º Turno';
   if(CFG.supervisor)t+=' | Líder: '+CFG.supervisor;
   t+='\n📅 '+data+'\n'+'─'.repeat(40)+'\n\n';
@@ -1322,64 +1314,8 @@ function copiarRelatorio(){
   else{var ta=document.createElement('textarea');ta.value=txt;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);flash();}
 }
 
-function imprimirSemanal(){
-  var url='';try{url=localStorage.getItem('gas_url_mazak')||'';}catch(e){}
-  if(!url||url.indexOf('script.google.com')===-1){alert('Configure a URL do Apps Script na aba Relatório.');return;}
-  var btn=document.querySelector('[onclick="imprimirSemanal()"]');if(btn){btn.textContent='⏳ Buscando...';btn.disabled=true;}
-  var xhr=new XMLHttpRequest();xhr.open('GET',url+'?acao=semanal',true);
-  xhr.onload=function(){
-    if(btn){btn.textContent='📅 Imprimir Semanal';btn.disabled=false;}
-    try{
-      var res=JSON.parse(xhr.responseText);
-      if(!res.ok){alert('Erro: '+(res.erro||'desconhecido'));return;}
-      var turnos=res.turnos||[],paradas=res.paradas||[];
-      if(!turnos.length){alert('Sem dados dos últimos 7 dias.');return;}
-      var n=turnos.length,totBoas=0,totPar=0,somaOEE=0;
-      turnos.forEach(function(t){totBoas+=t.boas;totPar+=t.par;somaOEE+=t.oee;});
-      var oeeM=somaOEE/n,freq={};
-      paradas.forEach(function(p){var c=p.tipo||'Outro';freq[c]=(freq[c]||0)+(p.duracao||0);});
-      var t='╔═══════════════════════════════════════╗\n║  RELATÓRIO SEMANAL — MAZAK   ║\n╚═══════════════════════════════════════╝\n';
-      t+='Operador: '+(CFG.operador||'Diego')+' | Líder: '+(CFG.supervisor||'—')+'\n';
-      t+='Período: '+turnos[0].data+' → '+turnos[turnos.length-1].data+'\n─'.repeat(42)+'\n\n';
-      t+='📊 OEE MÉDIO: '+oeeM.toFixed(1)+'% | Turnos: '+n+' | Boas: '+totBoas+' | Paradas: '+totPar+' min\n\n';
-      Object.keys(freq).sort(function(a,b){return freq[b]-freq[a];}).slice(0,5).forEach(function(k){t+='  • '+k+': '+freq[k]+' min\n';});
-      t+='\n';
-      turnos.forEach(function(tr,i){var ic=tr.oee>=85?'✅':tr.oee>=65?'⚠':'✗';t+=(i+1)+'. '+tr.data+' T'+tr.turno+' — OEE: '+tr.oee.toFixed(1)+'% '+ic+' | Boas: '+tr.boas+"\n";});
-      t+='\n'+(oeeM>=85?'✅ OEE acima da meta (85%)':oeeM>=65?'⚠ Abaixo da meta':'✗ OEE crítico')+'\n';
-      var pa=document.getElementById('print-area');if(pa){pa.style.fontFamily="'Courier New',monospace";pa.textContent=t;}
-      window.print();
-    }catch(ex){alert('Erro: '+ex.message);}
-  };
-  xhr.onerror=function(){if(btn){btn.textContent='📅 Imprimir Semanal';btn.disabled=false;}alert('Sem conexão.');};
-  xhr.send();
-}
 
 // ── GAS ──────────────────────────────────────────────────────
-function toggleGasConfig(){var b=document.getElementById('gasBody'),btn=document.getElementById('gasToggleBtn'),vis=b.style.display!=='none';b.style.display=vis?'none':'block';btn.textContent=vis?'▼ configurar':'▲ fechar';}
-function salvarGasUrl(){try{localStorage.setItem('gas_url_mazak',document.getElementById('gasUrl').value.trim());}catch(e){}atualizarStatusGas();}
-function atualizarStatusGas(){var url='';try{url=localStorage.getItem('gas_url_mazak')||'';}catch(e){}var el=document.getElementById('gasStatus');if(!el)return;if(url&&url.indexOf('script.google.com')>-1){el.textContent='✓ URL configurada';el.style.color='var(--primaryL)';}else if(url){el.textContent='⚠ URL incorreta';el.style.color='var(--yellow)';}else{el.textContent='— cole a URL do Apps Script';el.style.color='var(--textMut)';}}
-function montarPayload(){
-  var G=calcGlobalOEE();var now=new Date();
-  var id='MAZAK_'+now.getFullYear()+('0'+(now.getMonth()+1)).slice(-2)+('0'+now.getDate()).slice(-2)+'_'+('0'+now.getHours()).slice(-2)+('0'+now.getMinutes()).slice(-2);
-  return{turno_id:id,maquina:'MAZAK',operador:CFG.operador,supervisor:CFG.supervisor,numTurno:CFG.numTurno,
-    data:now.toLocaleDateString('pt-BR'),hora_fim:now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),
-    boas:G.boas,refugo:G.refugo,meta:G.meta,
-    oee:parseFloat((G.oee*100).toFixed(1)),disp:parseFloat((G.disp*100).toFixed(1)),
-    perf:parseFloat((G.perf*100).toFixed(1)),qual:parseFloat((G.qual*100).toFixed(1)),
-    min_paradas:G.par,paradas:S.paradas,medicoes:S.medicoes,proc:S.proc,analise:S.analise,
-    ferramentas:CFG.ferramentas||[],
-    maquinas:S.maquinas,obs_proximo:document.getElementById('obsProx')?document.getElementById('obsProx').value:''};
-}
-function enviarPlanilha(){
-  var url='';try{url=localStorage.getItem('gas_url_mazak')||'';}catch(e){}
-  var btn=document.getElementById('sheet-btn');
-  if(!url||url.indexOf('script.google.com')===-1){document.getElementById('gasBody').style.display='block';document.getElementById('gasToggleBtn').textContent='▲ fechar';btn.textContent='⚠ Configure a URL primeiro';setTimeout(function(){btn.textContent='📊 Enviar para Planilha';},2500);return;}
-  var payload=montarPayload();btn.textContent='⏳ Enviando...';btn.disabled=true;
-  var xhr=new XMLHttpRequest();xhr.open('POST',url,true);xhr.setRequestHeader('Content-Type','text/plain');
-  xhr.onload=function(){btn.textContent='✅ Enviado!';btn.style.background='#166534';setTimeout(function(){btn.textContent='📊 Enviar para Planilha';btn.style.background='';btn.disabled=false;},3000);};
-  xhr.onerror=function(){var fila=[];try{fila=JSON.parse(localStorage.getItem('gas_fila_mazak')||'[]');}catch(e){}fila.push(payload);try{localStorage.setItem('gas_fila_mazak',JSON.stringify(fila));}catch(e){}btn.textContent='⚠ Offline — salvo na fila';btn.style.background='#B45309';setTimeout(function(){btn.textContent='📊 Enviar para Planilha';btn.style.background='';btn.disabled=false;},3000);};
-  xhr.send(JSON.stringify(payload));
-}
 
 function confirmarNovoTurno(){document.getElementById('modalNovoTurno').classList.add('show');}
 function fecharModal(){document.getElementById('modalNovoTurno').classList.remove('show');}
@@ -1426,16 +1362,16 @@ setInterval(function(){document.getElementById('hDate').textContent=new Date().t
 load();
 var cfgMap={nomeOperador:'operador',nomeSupervisor:'supervisor',numTurno:'numTurno',pctDesconto:'pctDesconto'};
 Object.keys(cfgMap).forEach(function(id){var el=document.getElementById(id);if(el&&CFG[cfgMap[id]]!==undefined)el.value=CFG[cfgMap[id]];});
-// Restaura minTurno
-if(CFG.minTurno){TURNO=CFG.minTurno;var mtEl=document.getElementById('minTurno');if(mtEl)mtEl.value=CFG.minTurno;}
 var ho=document.getElementById('hOperador');var hs=document.getElementById('hSupervisor');
 if(ho)ho.textContent=CFG.operador||'Diego';if(hs)hs.textContent=CFG.supervisor||'Alex';
 if(S.proc.obs){var po=document.getElementById('procObs');if(po)po.value=S.proc.obs;}
 var dtEl=document.getElementById('dataTurno');
 if(dtEl){if(S.dataTurno)dtEl.value=S.dataTurno;else{var td=new Date();dtEl.value=td.getFullYear()+'-'+('0'+(td.getMonth()+1)).slice(-2)+'-'+('0'+td.getDate()).slice(-2);}}
-atualizarStatusGas();
+var gasU='';try{gasU=localStorage.getItem('gas_url_mazak')||'';}catch(e){}
+if(gasU){var ge=document.getElementById('gasUrl');if(ge)ge.value=gasU;}
 
-// Verifica sessão salva — se válida, entra direto; se não, mostra login
+render();
+// Verifica sessão salva
 document.getElementById('header').style.display='none';
 document.getElementById('content').style.display='none';
 sbVerificarToken().then(function(ok){
@@ -1452,6 +1388,7 @@ sbVerificarToken().then(function(ok){
     render();
   }
 }).catch(function(){ mostrarLogin(); render(); });
+
 </script>
 </body>
 </html>
