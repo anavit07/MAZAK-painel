@@ -301,10 +301,6 @@ body *{display:none!important}
       <div class="grp md"><label>Líder</label><input type="text" id="nomeSupervisor" placeholder="Alex" oninput="salvarCFG()"></div>
     </div>
     <div class="row">
-      <div class="grp"><label>Nome Máquina 1</label><input type="text" id="nomeM07" placeholder="Ex: MAZAK 07" style="font-family:var(--mono);font-weight:700" oninput="salvarCFG()"></div>
-      <div class="grp"><label>Nome Máquina 2</label><input type="text" id="nomeM08" placeholder="Ex: MAZAK 08" style="font-family:var(--mono);font-weight:700" oninput="salvarCFG()"></div>
-    </div>
-    <div class="row">
       <div class="grp md">
         <label>Turno</label>
         <select id="numTurno" onchange="salvarCFG()">
@@ -384,8 +380,8 @@ body *{display:none!important}
     </div>
     <div class="grp"><label>Máquina</label>
       <select id="pMaquina">
-        <option value="MAZAK 07" id="optM07">MAZAK 07</option>
-        <option value="MAZAK 08" id="optM08">MAZAK 08</option>
+        <option value="MAZAK 07">MAZAK 07</option>
+        <option value="MAZAK 08">MAZAK 08</option>
         <option value="Ambas">Ambas</option>
       </select>
     </div>
@@ -416,8 +412,8 @@ body *{display:none!important}
       <div class="grp md">
         <label>Máquina</label>
         <select id="fMaquina">
-          <option value="MAZAK 07" id="optM07">MAZAK 07</option>
-          <option value="MAZAK 08" id="optM08">MAZAK 08</option>
+          <option value="MAZAK 07">MAZAK 07</option>
+          <option value="MAZAK 08">MAZAK 08</option>
         </select>
       </div>
     </div>
@@ -1023,7 +1019,6 @@ function salvarCFG(){
   if(ho)ho.textContent=CFG.operador||'Diego';
   if(hs)hs.textContent=CFG.supervisor||'Alex';
   save();
-  render();
 }
 
 function renderPaletes(){
@@ -1036,7 +1031,9 @@ function renderPaletes(){
     var bgM=mi===0?'var(--blueBg)':'#EDE9FE';
     h+='<div class="card" style="border-top:3px solid '+corM+'">'+
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'+
-      '<div style="font-size:12px;font-weight:700;font-family:var(--mono);color:'+corM+'">'+maq.nome+'</div>'+
+      '<input value="'+maq.nome+'" style="font-family:var(--mono);font-weight:700;font-size:12px;color:'+corM+';background:transparent;border:none;border-bottom:1px dashed '+corM+';outline:none;width:140px;padding:2px 4px" '+
+        'onblur="atuNomeMaq('+mi+',this.value)" '+
+        'title="Clique para editar o nome da máquina">'+
       '<div style="font-size:12px;font-family:var(--mono);font-weight:700;color:'+oc(c.oee)+'">OEE '+pf(c.oee)+'</div>'+
       '</div>';
     maq.paletes.forEach(function(pal,pi){
@@ -1097,6 +1094,20 @@ function renderPaletes(){
   lb.innerHTML=lh;
 }
 
+function atuNomeMaq(mi,val){
+  val=(val||'').trim();
+  if(!val)return;
+  S.maquinas[mi].nome=val;
+  if(mi===0)CFG.nomeM07=val;
+  if(mi===1)CFG.nomeM08=val;
+  // Atualiza dropdown de paradas
+  var sel=document.getElementById('pMaquina');
+  if(sel&&sel.options[mi])sel.options[mi].text=val;
+  var selF=document.getElementById('fMaquina');
+  if(selF&&selF.options[mi])selF.options[mi].text=val;
+  save();
+}
+
 function atuPalSave(mi,pi,campo,val){S.maquinas[mi].paletes[pi][campo]=val;save();}
 function atuPal(mi,pi,campo,val){S.maquinas[mi].paletes[pi][campo]=val;render();}
 function toggleFinalizada(mi,pi){S.maquinas[mi].paletes[pi].finalizada=!S.maquinas[mi].paletes[pi].finalizada;save();render();}
@@ -1112,6 +1123,13 @@ function render(){
   var G=calcGlobalOEE();
   var now=new Date();
   document.getElementById('hDate').textContent=now.toLocaleDateString('pt-BR');
+  // Atualizar dropdowns de parada e ferramenta com nomes reais
+  ['pMaquina','fMaquina'].forEach(function(sid){
+    var sel=document.getElementById(sid);
+    if(!sel)return;
+    S.maquinas.forEach(function(m,mi){if(sel.options[mi])sel.options[mi].text=m.nome;});
+    if(sel.options[2])sel.options[2].text='Ambas';
+  });
   var ov=document.getElementById('oeeVal');ov.textContent=pf(G.oee);ov.style.color=oc(G.oee);
   var b=document.getElementById('oeeBadge');
   b.textContent=G.oee>=0.85?'✓ OEE OK':G.oee>=0.65?'⚠ ATENÇÃO':'✕ CRÍTICO';
