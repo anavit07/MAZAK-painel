@@ -384,8 +384,8 @@ body *{display:none!important}
     </div>
     <div class="grp"><label>Máquina</label>
       <select id="pMaquina">
-        <option value="MAZAK 07">MAZAK 07</option>
-        <option value="MAZAK 08">MAZAK 08</option>
+        <option value="MAZAK 07" id="optM07">MAZAK 07</option>
+        <option value="MAZAK 08" id="optM08">MAZAK 08</option>
         <option value="Ambas">Ambas</option>
       </select>
     </div>
@@ -416,8 +416,8 @@ body *{display:none!important}
       <div class="grp md">
         <label>Máquina</label>
         <select id="fMaquina">
-          <option value="MAZAK 07">MAZAK 07</option>
-          <option value="MAZAK 08">MAZAK 08</option>
+          <option value="MAZAK 07" id="optM07">MAZAK 07</option>
+          <option value="MAZAK 08" id="optM08">MAZAK 08</option>
         </select>
       </div>
     </div>
@@ -536,8 +536,6 @@ body *{display:none!important}
 <!-- ── RELATÓRIO ── -->
 
 <div id="page-relatorio" class="page">
-    </div>
-</div>
   </div>
   <div class="card"><div class="card-title">Data do Turno</div><input type="date" id="dataTurno" onchange="save();document.getElementById('relatorioPrevia').textContent=gerarRelatorio()"></div>
   <div class="card"><div class="card-title">Obs. para o Próximo Turno</div><textarea id="obsProx" placeholder="Passe informações para o próximo turno..."></textarea></div>
@@ -925,8 +923,8 @@ function paleVazio(id,maqId){
 }
 var S={
   maquinas:[
-    {id:'M07',nome:'MAZAK 07',paletes:[paleVazio('A','M07'),paleVazio('B','M07')]},
-    {id:'M08',nome:'MAZAK 08',paletes:[paleVazio('A','M08'),paleVazio('B','M08')]}
+    {id:'M07',nome:CFG.nomeM07||'Máquina 1',paletes:[paleVazio('A','M07'),paleVazio('B','M07')]},
+    {id:'M08',nome:CFG.nomeM08||'Máquina 2',paletes:[paleVazio('A','M08'),paleVazio('B','M08')]}
   ],
   paradas:[],medicoes:[],
   medicaoDia:[{ok:null,motivos:[]},{ok:null,motivos:[]},{ok:null,motivos:[]}],
@@ -999,8 +997,8 @@ function load(){
         analise:Object.assign({problema:'',causaRaiz:'',oQueFoi:'',proposta:'',responsavel:'',acaoPendente:''},p.analise||{})
       };
       if(S.maquinas.length<2){S.maquinas=[
-        {id:'M07',nome:'MAZAK 07',paletes:[paleVazio('A','M07'),paleVazio('B','M07')]},
-        {id:'M08',nome:'MAZAK 08',paletes:[paleVazio('A','M08'),paleVazio('B','M08')]}
+        {id:'M07',nome:CFG.nomeM07||'Máquina 1',paletes:[paleVazio('A','M07'),paleVazio('B','M07')]},
+        {id:'M08',nome:CFG.nomeM08||'Máquina 2',paletes:[paleVazio('A','M08'),paleVazio('B','M08')]}
       ];}
     }
   }catch(e){}
@@ -1268,7 +1266,7 @@ function gerarRelatorio(){
   var now=new Date();
   var dtEl=document.getElementById('dataTurno');
   var data=dtEl&&dtEl.value?(function(v){var p=v.split('-');return p[2]+'/'+p[1]+'/'+p[0];})(dtEl.value):now.toLocaleDateString('pt-BR');
-  var t='📋 RELATÓRIO DE TURNO — MAZAK 07 e 08\n';
+  var t='📋 RELATÓRIO DE TURNO — MAZAK\n';
   t+='👤 Operador: '+(CFG.operador||'Diego')+' | '+CFG.numTurno+'º Turno';
   if(CFG.supervisor)t+=' | Líder: '+CFG.supervisor;
   t+='\n📅 '+data+'\n'+'─'.repeat(40)+'\n\n';
@@ -1333,8 +1331,8 @@ function novoTurno(){
   if(CFG.ferramentas){CFG.ferramentas.forEach(function(f){f.confirmada=false;f.horaConf='';});}
   S={
     maquinas:[
-      {id:'M07',nome:'MAZAK 07',paletes:[paleVazio('A','M07'),paleVazio('B','M07')]},
-      {id:'M08',nome:'MAZAK 08',paletes:[paleVazio('A','M08'),paleVazio('B','M08')]}
+      {id:'M07',nome:CFG.nomeM07||'Máquina 1',paletes:[paleVazio('A','M07'),paleVazio('B','M07')]},
+      {id:'M08',nome:CFG.nomeM08||'Máquina 2',paletes:[paleVazio('A','M08'),paleVazio('B','M08')]}
     ],
     paradas:[],medicoes:[],
     medicaoDia:[{ok:null,motivos:[]},{ok:null,motivos:[]},{ok:null,motivos:[]}],
