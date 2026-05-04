@@ -699,6 +699,9 @@ async function sbLoad() {
       S.proc       = Object.assign(S.proc,    p.proc    || {});
       S.analise    = Object.assign(S.analise, p.analise || {});
       if (p.cfg) { CFG = Object.assign(CFG, p.cfg); if(p.cfg.minTurno) TURNO = parseInt(p.cfg.minTurno)||491; }
+      // Sync machine names after loading
+      if(S.maquinas[0] && CFG.nomeM07) S.maquinas[0].nome = CFG.nomeM07;
+      if(S.maquinas[1] && CFG.nomeM08) S.maquinas[1].nome = CFG.nomeM08;
     }
   } catch(e) { console.warn('sbLoad erro', e); }
 }
@@ -1002,6 +1005,9 @@ function load(){
       ];}
     }
   }catch(e){}
+  // Sync machine names after loading from localStorage
+  if(CFG.nomeM07 && S.maquinas[0]) S.maquinas[0].nome = CFG.nomeM07;
+  if(CFG.nomeM08 && S.maquinas[1]) S.maquinas[1].nome = CFG.nomeM08;
 }
 
 function salvarCFG(){
@@ -1017,6 +1023,7 @@ function salvarCFG(){
   if(ho)ho.textContent=CFG.operador||'Diego';
   if(hs)hs.textContent=CFG.supervisor||'Alex';
   save();
+  render();
 }
 
 function renderPaletes(){
